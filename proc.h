@@ -49,6 +49,8 @@ struct proc {
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
+  int ticks_allocated;
+  int ticks_used;
 };
 
 // Process memory is laid out contiguously, low addresses first:
@@ -56,3 +58,15 @@ struct proc {
 //   original data and bss
 //   fixed-size stack
 //   expandable heap
+
+struct sched_queue {
+    struct sched_node *head;
+};
+
+struct sched_node {
+    struct proc *cur_proc;
+    struct sched_node *next;
+};
+
+void push(struct sched_queue*, struct proc*);
+void pop(struct sched_queue*);

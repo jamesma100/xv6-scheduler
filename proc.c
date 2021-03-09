@@ -7,6 +7,41 @@
 #include "proc.h"
 #include "spinlock.h"
 #include "pstat.h"
+#define NULL ((void *)0)
+// =====================================
+// Linked list to hold scheduling queues
+// =====================================
+void push(struct sched_queue *queue, struct proc *p) {
+    struct sched_node new_node;
+    new_node.cur_proc = p;
+    new_node.next = NULL;
+    if (queue->head == NULL) {
+        queue->head = &new_node;
+        queue->head->next = NULL;
+    } else {
+        struct sched_node *temp = queue->head;
+        while (temp->next != NULL) {
+            temp = temp->next;
+        }
+        temp->next = &new_node;
+        new_node.next = NULL;
+    }
+}
+
+void pop(struct sched_queue *queue) {
+    if (queue->head == NULL) {
+        return;
+    }
+    struct sched_node *saved_next = queue->head->next; 
+    queue->head = NULL;
+    queue->head = saved_next;
+}
+
+    
+
+// =====
+// End
+// =====
 
 struct {
   struct spinlock lock;
