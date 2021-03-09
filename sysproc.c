@@ -89,3 +89,26 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+// ===============
+// P4 SYSTEM CALLS
+// ===============
+int
+sys_setslice(void) {
+  return -1;
+}
+
+int
+sys_getslice(void) {
+  return -1;
+}
+
+int
+sys_fork2(void) {
+  return -1;
+}
+
+int
+sys_getpinfo(void) {
+  return -1;
+}
