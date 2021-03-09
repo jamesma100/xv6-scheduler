@@ -6,6 +6,7 @@
 #include "memlayout.h"
 #include "mmu.h"
 #include "proc.h"
+#include "pstat.h"
 
 int
 sys_fork(void)
@@ -95,20 +96,44 @@ sys_uptime(void)
 // ===============
 int
 sys_setslice(void) {
-  return -1;
+  int pid, slice;
+
+  if(argint(0, &pid) < 0 || argint(1, &slice) <= 0) {
+    return -1;
+  }
+
+  return 1;
 }
 
 int
 sys_getslice(void) {
-  return -1;
+  int pid;
+
+  if(argint(0, &pid) < 0) {
+    return -1;
+  }
+
+  return 1;
 }
 
 int
 sys_fork2(void) {
-  return -1;
+  int slice;
+
+  if(argint(0, &slice) <= 0) {
+    return -1;
+  }
+
+  return 1;
 }
 
 int
 sys_getpinfo(void) {
-  return -1;
+  struct pstat *ps;
+
+  if (argptr(1, (void*)&ps, sizeof(*ps)) < 0) {
+    return -1;
+  }
+
+  return 1;
 }
