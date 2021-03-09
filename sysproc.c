@@ -102,7 +102,7 @@ sys_setslice(void) {
     return -1;
   }
 
-  return 1;
+  return setslice(pid, slice);
 }
 
 int
@@ -113,7 +113,7 @@ sys_getslice(void) {
     return -1;
   }
 
-  return 1;
+  return getslice(pid);
 }
 
 int
@@ -124,7 +124,7 @@ sys_fork2(void) {
     return -1;
   }
 
-  return 1;
+  return fork2(slice);
 }
 
 int
@@ -135,5 +135,5 @@ sys_getpinfo(void) {
     return -1;
   }
 
-  return 1;
+  return getpinfo(ps);
 }

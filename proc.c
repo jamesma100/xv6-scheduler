@@ -6,6 +6,7 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
+#include "pstat.h"
 
 struct {
   struct spinlock lock;
@@ -531,4 +532,27 @@ procdump(void)
     }
     cprintf("\n");
   }
+}
+
+// ===============
+// P4 System Calls
+// ===============
+int
+setslice(int pid, int slice) {
+  return 1;
+}
+
+int
+getslice(int pid) {
+  return 1;
+}
+
+int
+fork2(int slice) {
+  return 1;
+}
+
+int
+getpinfo(struct pstat *ps) {
+  return 1;
 }
