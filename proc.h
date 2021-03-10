@@ -60,12 +60,12 @@ struct proc {
 //   expandable heap
 
 struct sched_queue {
-    struct sched_node *head;
+  struct sched_node *head;
 };
 
 struct sched_node {
-    struct proc *cur_proc;
-    struct sched_node *next;
+  struct proc *cur_proc;
+  struct sched_node *next;
 };
 
 void push(struct sched_queue*, struct proc*);
