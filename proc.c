@@ -7,6 +7,43 @@
 #include "proc.h"
 #include "spinlock.h"
 #include "pstat.h"
+#define NULL ((void *)0) // define NULL variable for kernel program
+// =====================================
+// Linked list to hold scheduling queues
+// =====================================
+void push(struct sched_queue *queue, struct proc *p) {
+  // initialize new node struct
+  struct sched_node new_node;
+  new_node.cur_proc = p;
+  new_node.next = NULL;
+  // first node in queue
+  if (queue->head == NULL) {
+    queue->head = &new_node;
+    queue->head->next = NULL;
+    return;
+  } else {     
+    struct sched_node *temp = queue->head;
+    while (temp->next != NULL) {
+        temp = temp->next;
+    }
+    temp->next = &new_node;
+    new_node.next = NULL;
+    return;
+  }
+}
+
+void pop(struct sched_queue *queue) {
+  if (queue->head == NULL) {
+    return;
+  }
+  struct sched_node *saved_next = queue->head->next;
+  queue->head = NULL;
+  queue->head = saved_next;
+}
+
+// =====
+// End
+// =====
 
 struct {
   struct spinlock lock;
