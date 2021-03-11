@@ -70,3 +70,4 @@ struct sched_node {
 
 void push(struct sched_queue*, struct proc*);
 void pop(struct sched_queue*);
+void print_queue(struct sched_queue*);

@@ -8,6 +8,12 @@
 #include "spinlock.h"
 #include "pstat.h"
 #define NULL ((void *)0) // define NULL variable for kernel program
+
+// initialize linked list
+struct sched_queue proc_q;
+
+//proc_q.head = NULL;
+
 // =====================================
 // Linked list to hold scheduling queues
 // =====================================
@@ -19,7 +25,9 @@ void push(struct sched_queue *queue, struct proc *p) {
   // first node in queue
   if (queue->head == NULL) {
     queue->head = &new_node;
-    queue->head->next = NULL;
+    queue->head->next = queue->head;
+    //cprintf("head with name %s pid %d \n", queue->head->cur_proc->name, queue->head->cur_proc->pid);
+    
     return;
   } else {     
     struct sched_node *temp = queue->head;
@@ -27,7 +35,8 @@ void push(struct sched_queue *queue, struct proc *p) {
         temp = temp->next;
     }
     temp->next = &new_node;
-    new_node.next = NULL;
+    new_node.next = queue->head;
+    print_queue(&proc_q);
     return;
   }
 }
@@ -39,6 +48,24 @@ void pop(struct sched_queue *queue) {
   struct sched_node *saved_next = queue->head->next;
   queue->head = NULL;
   queue->head = saved_next;
+}
+
+void print_queue(struct sched_queue *queue) {
+  cprintf("head with id %d \n", queue->head->cur_proc->pid);
+  cprintf("head's next with id %d \n", queue->head->next->cur_proc->pid);
+  
+  if (queue->head == NULL) {
+    cprintf("queue is empty\n");
+    return;
+  }
+  
+  struct sched_node* curr = queue->head;
+  while (curr->next != queue->head) {
+    //cprintf("process with pid %d\n", curr->cur_proc->pid);
+    curr = curr->next;
+  }
+  //cprintf("finish print\n");
+  return;
 }
 
 // =====
@@ -150,6 +177,9 @@ found:
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
 
+  // create node for process and add to list
+  push(&proc_q, p);
+  cprintf("node pushed\n");
   return p;
 }
 
@@ -160,7 +190,6 @@ userinit(void)
 {
   struct proc *p;
   extern char _binary_initcode_start[], _binary_initcode_size[];
-
   p = allocproc();
   
   initproc = p;
@@ -363,7 +392,9 @@ scheduler(void)
   struct proc *p;
   struct cpu *c = mycpu();
   c->proc = 0;
-  
+  //print_queue(&proc_q);
+  proc_q.head = NULL;
+
   for(;;){
     // Enable interrupts on this processor.
     sti();
@@ -391,6 +422,7 @@ scheduler(void)
     release(&ptable.lock);
 
   }
+  cprintf("exit scheduler\n");
 }
 
 // Enter scheduler.  Must hold only ptable.lock
