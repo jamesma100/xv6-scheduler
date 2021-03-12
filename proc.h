@@ -49,9 +49,15 @@ struct proc {
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
-  int ticks_allocated;
-  int ticks_used;
-  struct proc *next;
+  struct proc *next;           // Pointer to next process in linekd list variable
+  int timeslice;               // Number of base ticks this process can run in a timeslice
+  int schedticks;              // Number of timer ticks this process has used for its current timeslice
+  int schedticks_total;        // Total number of timer ticks this process has been scheduled
+  int compslice;               // Number of base compensation ticks this process currently has
+  int compticks;               // Number of compensation ticks this process has used for its current timeslice
+  int compticks_total;         // Number of compensation ticks this process has used
+  int sleepticks;              // Number of ticks during which this process was blocked
+  int switches;                // Total num times this process has been scheduled 
 };
 
 // Process memory is laid out contiguously, low addresses first:
