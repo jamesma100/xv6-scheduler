@@ -51,6 +51,7 @@ struct proc {
   char name[16];               // Process name (debugging)
   int ticks_allocated;
   int ticks_used;
+  struct proc *next;
 };
 
 // Process memory is laid out contiguously, low addresses first:
@@ -59,15 +60,7 @@ struct proc {
 //   fixed-size stack
 //   expandable heap
 
-struct sched_queue {
-  struct sched_node *head;
-};
 
-struct sched_node {
-  struct proc *cur_proc;
-  struct sched_node *next;
-};
-
-void push(struct sched_queue*, struct proc*);
-void pop(struct sched_queue*);
-void print_queue(struct sched_queue*);
+void push(struct proc*);
+struct proc* pop_head();
+void print_queue();

@@ -7,65 +7,41 @@
 #include "proc.h"
 #include "spinlock.h"
 #include "pstat.h"
-#define NULL ((void *)0) // define NULL variable for kernel program
+
 
 // initialize linked list
-struct sched_queue proc_q;
-
-//proc_q.head = NULL;
+struct proc *head;
+struct proc *tail;
 
 // =====================================
 // Linked list to hold scheduling queues
 // =====================================
-void push(struct sched_queue *queue, struct proc *p) {
-  // initialize new node struct
-  struct sched_node new_node;
-  new_node.cur_proc = p;
-  new_node.next = NULL;
-  // first node in queue
-  if (queue->head == NULL) {
-    queue->head = &new_node;
-    queue->head->next = queue->head;
-    //cprintf("head with name %s pid %d \n", queue->head->cur_proc->name, queue->head->cur_proc->pid);
-    
-    return;
-  } else {     
-    struct sched_node *temp = queue->head;
-    while (temp->next != NULL) {
-        temp = temp->next;
-    }
-    temp->next = &new_node;
-    new_node.next = queue->head;
-    print_queue(&proc_q);
-    return;
+void push(struct proc *p) {
+  // initialize new node struct=
+  if (head == NULL) {
+    head = p;
+    tail = p;
+  } else {
+    tail->next = p;
+    tail = p;
   }
+  // cprintf("head pid is : %d\n", head->pid);
+  // cprintf("tail pid is : %d\n", tail->pid);
 }
 
-void pop(struct sched_queue *queue) {
-  if (queue->head == NULL) {
-    return;
-  }
-  struct sched_node *saved_next = queue->head->next;
-  queue->head = NULL;
-  queue->head = saved_next;
+struct proc* pop_head() {
+  struct proc *tmp = head;
+  head = head->next;
+  tmp->next = NULL;
+  return tmp;
 }
 
-void print_queue(struct sched_queue *queue) {
-  cprintf("head with id %d \n", queue->head->cur_proc->pid);
-  cprintf("head's next with id %d \n", queue->head->next->cur_proc->pid);
-  
-  if (queue->head == NULL) {
-    cprintf("queue is empty\n");
-    return;
+void print_queue() {
+  struct proc *cur = head;
+  while (cur != NULL) {
+    cprintf("Process PID: %d\n", cur->pid);
+    cur = cur->next;
   }
-  
-  struct sched_node* curr = queue->head;
-  while (curr->next != queue->head) {
-    //cprintf("process with pid %d\n", curr->cur_proc->pid);
-    curr = curr->next;
-  }
-  //cprintf("finish print\n");
-  return;
 }
 
 // =====
@@ -178,8 +154,8 @@ found:
   p->context->eip = (uint)forkret;
 
   // create node for process and add to list
-  push(&proc_q, p);
-  cprintf("node pushed\n");
+  push(p);
+  cprintf("process %d pushed\n", p->pid);
   return p;
 }
 
@@ -392,8 +368,6 @@ scheduler(void)
   struct proc *p;
   struct cpu *c = mycpu();
   c->proc = 0;
-  //print_queue(&proc_q);
-  proc_q.head = NULL;
 
   for(;;){
     // Enable interrupts on this processor.
@@ -401,7 +375,10 @@ scheduler(void)
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    
+    // Loop over entire linked list
+    p = head;
+    for(;p != NULL;p = p->next) {
       if(p->state != RUNNABLE)
         continue;
 
@@ -418,6 +395,13 @@ scheduler(void)
       // Process is done running for now.
       // It should have changed its p->state before coming back.
       c->proc = 0;
+
+      // Move onto next node/process in linked list
+      if (p->next != NULL) {
+        p = p->next;
+      } else {
+        break;
+      }
     }
     release(&ptable.lock);
 

@@ -10,6 +10,7 @@ struct sleeplock;
 struct stat;
 struct superblock;
 struct pstat;
+#define NULL ((void *)0) // define NULL variable for kernel program
 
 // bio.c
 void            binit(void);
