@@ -29,11 +29,11 @@ void push(struct proc *p) {
   // cprintf("tail pid is : %d\n", tail->pid);
 }
 
-struct proc* pop_head() {
+// Rotates head node to tail
+void rotate() {
   struct proc *tmp = head;
   head = head->next;
-  tmp->next = NULL;
-  return tmp;
+  push(tmp);
 }
 
 void print_queue() {
@@ -42,12 +42,6 @@ void print_queue() {
     cprintf("Process PID: %d\n", cur->pid);
     cur = cur->next;
   }
-}
-
-void rotate() {
-  struct proc *tmp = head;
-  head = head->next;
-  push(tmp);
 }
 
 // =====
@@ -135,6 +129,7 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
+  p->timeslice = 1; // all new processes get a timeslice of 1
 
   release(&ptable.lock);
 
@@ -399,11 +394,16 @@ scheduler(void)
     // to release ptable.lock and then reacquire it
     // before jumping back to us.
     c->proc = p;
-    switchuvm(p);
-    p->state = RUNNING;
+    while (p->schedticks < p->timeslice) {
+      switchuvm(p);
+      p->state = RUNNING;
 
-    swtch(&(c->scheduler), p->context);
-    switchkvm();
+      swtch(&(c->scheduler), p->context);
+      switchkvm();
+      p->schedticks++;
+    }
+    p->schedticks = 0;
+    
 
     // Process is done running for now.
     // It should have changed its p->state before coming back.
