@@ -366,21 +366,38 @@ void
 scheduler(void)
 {
   struct proc *p;
+  // struct proc *tmp;
   struct cpu *c = mycpu();
   c->proc = 0;
-
+  p = head;
   for(;;){
     // Enable interrupts on this processor.
     sti();
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
-    
+    // cprintf("got here\n");
     // Loop over entire linked list
-    p = head;
-    for(;p != NULL;p = p->next) {
-      if(p->state != RUNNABLE)
+    
+
+    // for(;p != NULL; p = p->next) {
+      
+      // if(p == NULL) {
+      //   if(head == NULL) {
+      //     cprintf("double yikes\n");
+      //   }
+      //   cprintf("yikes\n");
+      // }
+
+      if(p->state != RUNNABLE) {
+        p = p->next;
+        if (p == NULL) {
+          p = head;
+        }
+        release(&ptable.lock);
         continue;
+      }
+        
 
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
@@ -396,13 +413,16 @@ scheduler(void)
       // It should have changed its p->state before coming back.
       c->proc = 0;
 
-      // Move onto next node/process in linked list
-      if (p->next != NULL) {
-        p = p->next;
-      } else {
-        break;
+      // Move ran process to tail
+      // tmp = pop_head();
+      // cprintf("head pid is %d\n", head->pid);
+      // cprintf("tmp pid is %d\n", tmp->pid);
+      // push(tmp);
+      p = p->next;
+      if (p == NULL) {
+        p = head;
       }
-    }
+    // }
     release(&ptable.lock);
 
   }
