@@ -44,6 +44,12 @@ void print_queue() {
   }
 }
 
+void rotate() {
+  struct proc *tmp = head;
+  head = head->next;
+  push(tmp);
+}
+
 // =====
 // End
 // =====
@@ -365,64 +371,44 @@ wait(void)
 void
 scheduler(void)
 {
-  struct proc *p;
-  // struct proc *tmp;
+  struct proc *p = head;
   struct cpu *c = mycpu();
   c->proc = 0;
-  p = head;
+
+  // Loop over process table looking for process to run.
   for(;;){
+    // cprintf("p pid is %d\n", p->pid);
     // Enable interrupts on this processor.
     sti();
 
-    // Loop over process table looking for process to run.
     acquire(&ptable.lock);
-    // cprintf("got here\n");
-    // Loop over entire linked list
-    
-
-    // for(;p != NULL; p = p->next) {
-      
-      // if(p == NULL) {
-      //   if(head == NULL) {
-      //     cprintf("double yikes\n");
-      //   }
-      //   cprintf("yikes\n");
-      // }
-
-      if(p->state != RUNNABLE) {
-        p = p->next;
-        if (p == NULL) {
-          p = head;
-        }
-        release(&ptable.lock);
-        continue;
-      }
-        
-
-      // Switch to chosen process.  It is the process's job
-      // to release ptable.lock and then reacquire it
-      // before jumping back to us.
-      c->proc = p;
-      switchuvm(p);
-      p->state = RUNNING;
-
-      swtch(&(c->scheduler), p->context);
-      switchkvm();
-
-      // Process is done running for now.
-      // It should have changed its p->state before coming back.
-      c->proc = 0;
-
-      // Move ran process to tail
-      // tmp = pop_head();
-      // cprintf("head pid is %d\n", head->pid);
-      // cprintf("tmp pid is %d\n", tmp->pid);
-      // push(tmp);
+    if(p->state != RUNNABLE) {
       p = p->next;
-      if (p == NULL) {
-        p = head;
+      if (p == NULL) { // I DONT KNOW WHY THIS IF ELSE STATEMENT IS NEEDED
+        p = head;      // IF I DONT INCLUDE IT XV6 DOESNT TAKE INPUTS
+      } else {
+        rotate();
       }
-    // }
+
+      release(&ptable.lock);
+      continue;
+    }
+      
+
+    // Switch to chosen process.  It is the process's job
+    // to release ptable.lock and then reacquire it
+    // before jumping back to us.
+    c->proc = p;
+    switchuvm(p);
+    p->state = RUNNING;
+
+    swtch(&(c->scheduler), p->context);
+    switchkvm();
+
+    // Process is done running for now.
+    // It should have changed its p->state before coming back.
+    c->proc = 0;
+    rotate();
     release(&ptable.lock);
 
   }
