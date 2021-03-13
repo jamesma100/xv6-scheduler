@@ -13,9 +13,9 @@
 struct proc *head;
 struct proc *tail;
 
-// =====================================
-// Linked list to hold scheduling queues
-// =====================================
+// =============================================
+// Linked list methods to maintain process queue
+// =============================================
 void push(struct proc *p) {
   // initialize new node struct=
   if (head == NULL) {

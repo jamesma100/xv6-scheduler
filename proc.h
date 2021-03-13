@@ -68,5 +68,5 @@ struct proc {
 
 
 void push(struct proc*);
-struct proc* pop_head();
+void rotate();
 void print_queue();
