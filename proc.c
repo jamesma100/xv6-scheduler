@@ -33,6 +33,7 @@ void push(struct proc *p) {
 void rotate() {
   struct proc *tmp = head;
   head = head->next;
+  tmp->next = NULL;
   push(tmp);
 }
 
@@ -384,7 +385,6 @@ scheduler(void)
       } else {
         rotate();
       }
-
       release(&ptable.lock);
       continue;
     }
