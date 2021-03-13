@@ -13,9 +13,9 @@
 struct proc *head;
 struct proc *tail;
 
-// =============================================
-// Linked list methods to maintain process queue
-// =============================================
+// =====================================
+// Linked list to hold scheduling queues
+// =====================================
 void push(struct proc *p) {
   // initialize new node struct=
   if (head == NULL) {
@@ -33,7 +33,6 @@ void push(struct proc *p) {
 void rotate() {
   struct proc *tmp = head;
   head = head->next;
-  tmp->next = NULL;
   push(tmp);
 }
 
@@ -375,16 +374,12 @@ scheduler(void)
   for(;;){
     // cprintf("p pid is %d\n", p->pid);
     // Enable interrupts on this processor.
+    p = head;
     sti();
 
     acquire(&ptable.lock);
     if(p->state != RUNNABLE) {
-      p = p->next;
-      if (p == NULL) { // I DONT KNOW WHY THIS IF ELSE STATEMENT IS NEEDED
-        p = head;      // IF I DONT INCLUDE IT XV6 DOESNT TAKE INPUTS
-      } else {
-        rotate();
-      }
+      rotate();
       release(&ptable.lock);
       continue;
     }
