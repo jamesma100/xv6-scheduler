@@ -593,12 +593,35 @@ procdump(void)
 // ===============
 int
 setslice(int pid, int slice) {
-  return 1;
+  struct proc *p;
+
+  acquire(&ptable.lock);
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->pid == pid){
+      p->timeslice = slice;
+      release(&ptable.lock);
+      return 0;
+    }
+  }
+  release(&ptable.lock);
+  return -1;
 }
 
 int
 getslice(int pid) {
-  return 1;
+  struct proc *p;
+  int slice;
+
+  acquire(&ptable.lock);
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->pid == pid){
+      slice = p->timeslice;
+      release(&ptable.lock);
+      return slice;
+    }
+  }
+  release(&ptable.lock);
+  return -1;
 }
 
 int
