@@ -67,13 +67,25 @@ sys_sleep(void)
     return -1;
   acquire(&tickslock);
   ticks0 = ticks;
-  while(ticks - ticks0 < n){
-    if(myproc()->killed){
-      release(&tickslock);
-      return -1;
-    }
-    sleep(&ticks, &tickslock);
+  // OLD CODE, leaving here for future reference
+  // while(ticks - ticks0 < n){
+  //   if(myproc()->killed){
+  //     release(&tickslock);
+  //     return -1;
+  //   }
+  //   sleep(&ticks, &tickslock);
+  // }
+  // release(&tickslock);
+
+
+  struct proc  *p = myproc();
+  if(p->killed){
+    release(&tickslock);
+    return -1;
   }
+
+  p->wakeuptick = ticks0 + n; // store when the process is supposed to wake up; 
+  sleep(&ticks, &tickslock);  // wakeup check moved to wakeup1() in proc.c
   release(&tickslock);
   return 0;
 }
