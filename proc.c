@@ -29,10 +29,32 @@ void push(struct proc *p) {
   // cprintf("tail pid is : %d\n", tail->pid);
 }
 
-// Rotates head node to tail
-void rotate() {
+void pop(struct proc *target, struct proc *cur, struct proc *prev) {
+  if (cur == 0) {
+    cprintf("Cannot find process %d in linked list\n", target->pid);
+  } else if (cur == target) { 
+    if (cur == head) { // Node to remove is head of linked list
+      head = head->next;
+    } else { // Node to remove is not head of linked list
+      prev->next = cur->next;
+    }
+    cur->next = NULL;
+
+  } else {
+    pop(target, cur->next, cur);
+  }
+}
+
+struct proc* popHead() {
   struct proc *tmp = head;
   head = head->next;
+  tmp->next = NULL;
+  return tmp;
+}
+
+// Rotates head node to tail
+void rotate() {
+  struct proc *tmp = popHead();
   push(tmp);
 }
 
@@ -305,6 +327,9 @@ exit(void)
     }
   }
 
+  // Remove process from linked list
+  pop(curproc, head, NULL);
+
   // Jump into the scheduler, never to return.
   curproc->state = ZOMBIE;
   sched();
@@ -373,8 +398,9 @@ scheduler(void)
   // Loop over process table looking for process to run.
   for(;;){
     // cprintf("p pid is %d\n", p->pid);
-    // Enable interrupts on this processor.
     p = head;
+
+      // Enable interrupts on this processor.
     sti();
 
     acquire(&ptable.lock);
