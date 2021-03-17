@@ -1,14 +1,18 @@
 #include "types.h"
 #include "stat.h"
 #include "user.h"
+#include "pstat.h"
+#include "stdlib.h"
 
 int
 main(int argc, char **argv)
 {
+    /*
     if (argc != 6) {
         printf(2, "exactly five arguments allowed\n");
         exit();
     }
+    */
 /*
     int sliceA = atoi(argv[1]);
     int sleepA = atoi(argv[2]);
@@ -17,6 +21,7 @@ main(int argc, char **argv)
     int sleepParent = atoi(argv[5]);
 */
     // TODO
-
+    struct pstat *p = malloc(sizeof(struct pstat));
+    getpinfo(p);
     exit();
 }

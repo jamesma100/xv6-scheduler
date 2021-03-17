@@ -631,5 +631,23 @@ fork2(int slice) {
 
 int
 getpinfo(struct pstat *ps) {
-  return 1;
+  struct proc *p;
+  acquire(&ptable.lock);
+  int i = 0;
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if (p == 0) {
+      ps->inuse[i] = 0;
+    } else {
+      ps->inuse[i] = 1;
+      ps->pid[i] = p->pid;
+      ps->timeslice[i] = p->timeslice;
+      ps->compticks[i] = p->compticks_total;
+      ps->schedticks[i] = p->schedticks_total;
+      ps->sleepticks[i] = p->schedticks_total;
+      ps->switches[i] = p->switches;
+    }
+    i++;
+  }
+  release(&ptable.lock);
+  return 0;
 }
