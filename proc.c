@@ -178,8 +178,7 @@ found:
   p->context->eip = (uint)forkret;
 
   // create node for process and add to list
-  setslice(p->pid,5); // currently gives zombie exit
-  cprintf("pushing process %d\n", p->pid);
+  // setslice(p->pid,5); // currently gives zombie exit
   push(p);
   cprintf("process %d pushed\n", p->pid);
   // struct pstat p_temp;
@@ -418,6 +417,7 @@ scheduler(void)
       continue;
     }
       
+    p->switches++; // FOR PSTAT
 
     // Switch to chosen process.  It is the process's job
     // to release ptable.lock and then reacquire it
@@ -430,6 +430,7 @@ scheduler(void)
       swtch(&(c->scheduler), p->context);
       switchkvm();
       p->schedticks++;
+      p->schedticks_total++; // FOR PSTAT
     }
     p->schedticks = 0;
     
@@ -722,7 +723,7 @@ getpinfo(struct pstat *ps) {
       ps->timeslice[i] = p->timeslice;
       ps->compticks[i] = p->compticks_total;
       ps->schedticks[i] = p->schedticks_total;
-      ps->sleepticks[i] = p->schedticks_total;
+      ps->sleepticks[i] = p->sleepticks;
       ps->switches[i] = p->switches;
       cprintf("id: %d, \n",p->pid);
     }
