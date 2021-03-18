@@ -334,8 +334,9 @@ exit(void)
     }
   }
 
-  // Remove process from linked list
-  pop(curproc, head, NULL);
+  // Remove process from linked list 
+  // MOVED POP TO SCHEDULER()
+  // pop(curproc, head, NULL);
 
   // Jump into the scheduler, never to return.
   curproc->state = ZOMBIE;
@@ -422,7 +423,7 @@ scheduler(void)
     // to release ptable.lock and then reacquire it
     // before jumping back to us.
     c->proc = p;
-    while (p->schedticks < p->timeslice) {
+    while (p->schedticks < p->timeslice && p->state != ZOMBIE) {
       switchuvm(p);
       p->state = RUNNING;
 
@@ -436,7 +437,12 @@ scheduler(void)
     // Process is done running for now.
     // It should have changed its p->state before coming back.
     c->proc = 0;
-    rotate();
+
+    if (p->state == ZOMBIE) {
+      popHead();
+    } else {
+      rotate();
+    }
     release(&ptable.lock);
 
   }
