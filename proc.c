@@ -178,7 +178,8 @@ found:
   p->context->eip = (uint)forkret;
 
   // create node for process and add to list
-  // setslice(p->pid,5); // currently gives zombie exit
+  setslice(p->pid,5); // currently gives zombie exit
+  cprintf("pushing process %d\n", p->pid);
   push(p);
   cprintf("process %d pushed\n", p->pid);
   // struct pstat p_temp;
@@ -707,7 +708,7 @@ getpinfo(struct pstat *ps) {
   acquire(&ptable.lock);
   int i = 0;
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-    if (p == 0) {
+    if (p == 0 || p -> pid == 0) {
       ps->inuse[i] = 0;
     } else {
       ps->inuse[i] = 1;
@@ -717,6 +718,7 @@ getpinfo(struct pstat *ps) {
       ps->schedticks[i] = p->schedticks_total;
       ps->sleepticks[i] = p->schedticks_total;
       ps->switches[i] = p->switches;
+      cprintf("id: %d, \n",p->pid);
     }
     i++;
   }
