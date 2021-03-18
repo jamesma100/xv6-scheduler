@@ -1,3 +1,7 @@
+#ifndef _USER_H_
+#define _USER_H_
+#include "param.h"
+
 struct stat;
 struct pstat;
 struct rtcdate;
@@ -42,3 +46,5 @@ void* memset(void*, int, uint);
 void* malloc(uint);
 void free(void*);
 int atoi(const char*);
+
+#endif

@@ -23,16 +23,39 @@ void push(struct proc *p) {
     tail = p;
   } else {
     tail->next = p;
+    p->next = NULL;
     tail = p;
   }
   // cprintf("head pid is : %d\n", head->pid);
   // cprintf("tail pid is : %d\n", tail->pid);
 }
 
-// Rotates head node to tail
-void rotate() {
+void pop(struct proc *target, struct proc *cur, struct proc *prev) {
+  if (cur == 0) {
+    cprintf("Cannot find process %d in linked list\n", target->pid);
+  } else if (cur == target) { 
+    if (cur == head) { // Node to remove is head of linked list
+      head = head->next;
+    } else { // Node to remove is not head of linked list
+      prev->next = cur->next;
+    }
+    cur->next = NULL;
+
+  } else {
+    pop(target, cur->next, cur);
+  }
+}
+
+struct proc* popHead() {
   struct proc *tmp = head;
   head = head->next;
+  tmp->next = NULL;
+  return tmp;
+}
+
+// Rotates head node to tail
+void rotate() {
+  struct proc *tmp = popHead();
   push(tmp);
 }
 
@@ -155,8 +178,13 @@ found:
   p->context->eip = (uint)forkret;
 
   // create node for process and add to list
+  // setslice(p->pid,5); // currently gives zombie exit
   push(p);
   cprintf("process %d pushed\n", p->pid);
+  // struct pstat p_temp;
+  // getpinfo(&p_temp);
+  // print_queue();
+  
   return p;
 }
 
@@ -305,6 +333,9 @@ exit(void)
     }
   }
 
+  // Remove process from linked list
+  pop(curproc, head, NULL);
+
   // Jump into the scheduler, never to return.
   curproc->state = ZOMBIE;
   sched();
@@ -373,8 +404,9 @@ scheduler(void)
   // Loop over process table looking for process to run.
   for(;;){
     // cprintf("p pid is %d\n", p->pid);
-    // Enable interrupts on this processor.
     p = head;
+
+      // Enable interrupts on this processor.
     sti();
 
     acquire(&ptable.lock);
@@ -621,12 +653,52 @@ getslice(int pid) {
     }
   }
   release(&ptable.lock);
+
   return -1;
 }
 
 int
 fork2(int slice) {
-  return 1;
+  int i, pid;
+  struct proc *np;
+  struct proc *curproc = myproc();
+
+  // Allocate new process np
+  if((np = allocproc()) == 0){
+    return -1;
+  }
+
+  // Copy process state from proc.
+  if((np->pgdir = copyuvm(curproc->pgdir, curproc->sz)) == 0){
+    kfree(np->kstack);
+    np->kstack = 0;
+    np->state = UNUSED;
+    return -1;
+  }
+  np->sz = curproc->sz;
+  np->parent = curproc;
+  *np->tf = *curproc->tf;
+  np->timeslice = slice; // set timeslice
+
+  // Clear %eax so that fork returns 0 in the child.
+  np->tf->eax = 0;
+
+  for(i = 0; i < NOFILE; i++)
+    if(curproc->ofile[i])
+      np->ofile[i] = filedup(curproc->ofile[i]);
+  np->cwd = idup(curproc->cwd);
+
+  safestrcpy(np->name, curproc->name, sizeof(curproc->name));
+
+  pid = np->pid;
+
+  acquire(&ptable.lock);
+
+  np->state = RUNNABLE;
+
+  release(&ptable.lock);
+
+  return pid;
 }
 
 int
@@ -648,6 +720,21 @@ getpinfo(struct pstat *ps) {
     }
     i++;
   }
+  // print pstat data
+  for (int i = 0; i < NPROC; ++i) {
+    if (ps->pid[i] == 0) {
+      break;
+    }
+    cprintf("inuse: %d, ",ps->inuse[i]);
+    cprintf("pid: %d, ",ps->pid[i]);
+    cprintf("timeslice: %d, ",ps->timeslice[i]);
+    cprintf("compticks: %d, ",ps->compticks[i]);
+    cprintf("schedticks: %d, ",ps->schedticks[i]);
+    cprintf("sleepticks: %d, ",ps->sleepticks[i]);
+    cprintf("switches: %d\n",ps->switches[i]);
+  }
+  // end print
   release(&ptable.lock);
+  cprintf("end of getpinfo\n");
   return 0;
 }
