@@ -153,6 +153,9 @@ found:
   p->state = EMBRYO;
   p->pid = nextpid++;
   p->timeslice = 1; // all new processes get a timeslice of 1
+  p->compslice = 0;
+  p->sleepticks = 0;
+  p->compticks = 0;
 
   release(&ptable.lock);
 
@@ -431,7 +434,7 @@ scheduler(void)
       switchkvm();
 
       if (p->schedticks >= p->timeslice) {
-        p->compticks_total++; // process is currently using a compensation tick
+        p->compticks++; // process is currently using a compensation tick
       }
 
       p->schedticks++;
@@ -561,8 +564,9 @@ wakeup1(void *chan)
   struct proc *p;
 
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
-    if(p->state == SLEEPING) {
-      p->compslice ++; // compensation ticks for sleeping
+    if(p->state == SLEEPING && p->chan == chan && chan == &ticks) {
+      p->compslice++; // compensation ticks for sleeping'
+      p->sleepticks++; // PSTAT
     }
 
     if(p->state == SLEEPING && p->chan == chan && p->wakeuptick <= ticks) { // e.g. if a process sleeps on tick 4 for 3 ticks (wakeuptick=7), it should wakeup at tick 7
@@ -735,7 +739,7 @@ getpinfo(struct pstat *ps) {
       ps->inuse[i] = 1;
       ps->pid[i] = p->pid;
       ps->timeslice[i] = p->timeslice;
-      ps->compticks[i] = p->compticks_total;
+      ps->compticks[i] = p->compticks;
       ps->schedticks[i] = p->schedticks_total;
       ps->sleepticks[i] = p->sleepticks;
       ps->switches[i] = p->switches;
