@@ -109,8 +109,11 @@ sys_uptime(void)
 int
 sys_setslice(void) {
   int pid, slice;
+  argint(0, &pid);
+  argint(1, &slice);
 
-  if(argint(0, &pid) < 0 || argint(1, &slice) <= 0) {
+
+  if(pid < 0 || slice <= 0) {
     return -1;
   }
 
@@ -143,7 +146,7 @@ int
 sys_getpinfo(void) {
   struct pstat *ps;
 
-  if (argptr(1, (void*)&ps, sizeof(*ps)) < 0) {
+  if (argptr(0, (void*)&ps, sizeof(*ps)) < 0) {
     return -1;
   }
 
