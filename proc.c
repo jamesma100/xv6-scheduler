@@ -735,7 +735,7 @@ getpinfo(struct pstat *ps) {
       ps->inuse[i] = 1;
       ps->pid[i] = p->pid;
       ps->timeslice[i] = p->timeslice;
-      ps->compticks[i] = p->compticks_total;
+      ps->compticks[i] = p->compticks;
       ps->schedticks[i] = p->schedticks_total;
       ps->sleepticks[i] = p->sleepticks;
       ps->switches[i] = p->switches;
