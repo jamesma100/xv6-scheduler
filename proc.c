@@ -424,15 +424,21 @@ scheduler(void)
     // to release ptable.lock and then reacquire it
     // before jumping back to us.
     c->proc = p;
-    while (p->schedticks < p->timeslice && p->state != ZOMBIE) {
+    while (p->schedticks < p->timeslice + p->compslice && p->state != ZOMBIE) {
       switchuvm(p);
       p->state = RUNNING;
 
       swtch(&(c->scheduler), p->context);
       switchkvm();
+
+      if (p->schedticks >= p->timeslice) {
+        p->compticks_total++; // process is currently using a compensation tick
+      }
+
       p->schedticks++;
       p->schedticks_total++; // FOR PSTAT
     }
+    p->compslice = 0; // any unused compensation ticks are gone after process finishes running
     p->schedticks = 0;
     
 
@@ -555,9 +561,17 @@ wakeup1(void *chan)
 {
   struct proc *p;
 
-  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
-    if(p->state == SLEEPING && p->chan == chan && p->wakeuptick <= ticks) // e.g. if a process sleeps on tick 4 for 3 ticks (wakeuptick=7), it should wakeup at tick 7
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+    if(p->state == SLEEPING) {
+      p->compslice ++; // compensation ticks for sleeping
+    }
+
+    if(p->state == SLEEPING && p->chan == chan && p->wakeuptick <= ticks) { // e.g. if a process sleeps on tick 4 for 3 ticks (wakeuptick=7), it should wakeup at tick 7
       p->state = RUNNABLE;
+    } 
+      
+  }
+    
 }
 
 // Wake up all processes sleeping on chan.
