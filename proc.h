@@ -58,6 +58,7 @@ struct proc {
   int sleepticks;              // Number of ticks during which this process was blocked
   int switches;                // Total num times this process has been scheduled 
   int wakeuptick;              // Tick when a sleeping process is supposed to wake up
+  int asleeptick;              // Tick that the process fell asleep on
 };
 
 // Process memory is laid out contiguously, low addresses first:
