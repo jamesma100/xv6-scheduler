@@ -10,13 +10,12 @@ int
 main(int argc, char **argv)
 {
     // int pid = getpid();
+    // printf(1, "pid is %d\n", pid);
+    // setslice(pid, 3);
     // struct pstat ps;
-    // printf(1, "pointer in user program is %p\n", &ps);
+    // getpinfo(&ps);
 
-    // //printf(1, "pid is %d\n", pid);
-    
-    // int res = getslice(pid);
-    // printf(1, "res code is %d\n", res);
+    // sleep(37);
     // getpinfo(&ps);
 
 

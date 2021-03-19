@@ -85,6 +85,8 @@ sys_sleep(void)
   }
 
   p->wakeuptick = ticks0 + n; // store when the process is supposed to wake up; 
+  p->compslice = n;
+  p->sleepticks += n;
   sleep(&ticks, &tickslock);  // wakeup check moved to wakeup1() in proc.c
   release(&tickslock);
   return 0;
