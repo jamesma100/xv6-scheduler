@@ -156,6 +156,9 @@ found:
   p->compslice = 0;
   p->sleepticks = 0;
   p->compticks = 0;
+  p->switches = 0;
+  p->schedticks = 0;
+  p->schedticks_total = 0;
 
   release(&ptable.lock);
 
@@ -599,8 +602,10 @@ kill(int pid)
     if(p->pid == pid){
       p->killed = 1;
       // Wake process from sleep if necessary.
-      if(p->state == SLEEPING)
+      if(p->state == SLEEPING) {
         p->state = RUNNABLE;
+        push(p); // Per Piazza @705
+      }
       release(&ptable.lock);
       return 0;
     }
@@ -652,7 +657,6 @@ procdump(void)
 int
 setslice(int pid, int slice) {
   struct proc *p;
-
   acquire(&ptable.lock);
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->pid == pid){
@@ -732,10 +736,19 @@ getpinfo(struct pstat *ps) {
   struct proc *p;
   acquire(&ptable.lock);
   int i = 0;
-  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-    if (p == 0 || p -> pid == 0) {
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++, i++){    
+    if (p->state == UNUSED) {
       ps->inuse[i] = 0;
-    } else {
+      ps->pid[i] = 0;
+      ps->timeslice[i] = 0;
+      ps->compticks[i] = 0;
+      ps->schedticks[i] = 0;
+      ps->sleepticks[i] = 0;
+      ps->switches[i] = 0;
+    } 
+    
+    else {
+      cprintf("looking at pid %d\n", p->pid);
       ps->inuse[i] = 1;
       ps->pid[i] = p->pid;
       ps->timeslice[i] = p->timeslice;
@@ -743,23 +756,21 @@ getpinfo(struct pstat *ps) {
       ps->schedticks[i] = p->schedticks_total;
       ps->sleepticks[i] = p->sleepticks;
       ps->switches[i] = p->switches;
-      cprintf("id: %d, \n",p->pid);
+      // cprintf("pid: %d , ",ps->pid[i]);
+      // cprintf("timeslice: %d\n, ",ps->timeslice[i]);
     }
-    i++;
   }
+
   // print pstat data
-  for (int i = 0; i < NPROC; ++i) {
-    if (ps->pid[i] == 0) {
-      break;
-    }
-    cprintf("inuse: %d, ",ps->inuse[i]);
-    cprintf("pid: %d, ",ps->pid[i]);
-    cprintf("timeslice: %d, ",ps->timeslice[i]);
-    cprintf("compticks: %d, ",ps->compticks[i]);
-    cprintf("schedticks: %d, ",ps->schedticks[i]);
-    cprintf("sleepticks: %d, ",ps->sleepticks[i]);
-    cprintf("switches: %d\n",ps->switches[i]);
-  }
+  // for (int i = 0; i < NPROC; ++i) {
+  //   cprintf("inuse: %d, ",ps->inuse[i]);
+  //   cprintf("pid: %d, ",ps->pid[i]);
+  //   cprintf("timeslice: %d, ",ps->timeslice[i]);
+  //   cprintf("compticks: %d, ",ps->compticks[i]);
+  //   cprintf("schedticks: %d, ",ps->schedticks[i]);
+  //   cprintf("sleepticks: %d, ",ps->sleepticks[i]);
+  //   cprintf("switches: %d\n",ps->switches[i]);
+  // }
   // end print
   release(&ptable.lock);
   cprintf("end of getpinfo\n");
