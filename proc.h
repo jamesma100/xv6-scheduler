@@ -54,8 +54,7 @@ struct proc {
   int schedticks;              // Number of timer ticks this process has used for its current timeslice
   int schedticks_total;        // Total number of timer ticks this process has been scheduled
   int compslice;               // Number of base compensation ticks this process currently has
-  int compticks;               // Number of compensation ticks this process has used for its current timeslice
-  int compticks_total;         // Number of compensation ticks this process has used
+  int compticks;               // Number of compensation ticks this process has used in total
   int sleepticks;              // Number of ticks during which this process was blocked
   int switches;                // Total num times this process has been scheduled 
   int wakeuptick;              // Tick when a sleeping process is supposed to wake up
