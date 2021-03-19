@@ -334,8 +334,9 @@ exit(void)
     }
   }
 
-  // Remove process from linked list
-  pop(curproc, head, NULL);
+  // Remove process from linked list 
+  // MOVED POP TO SCHEDULER()
+  // pop(curproc, head, NULL);
 
   // Jump into the scheduler, never to return.
   curproc->state = ZOMBIE;
@@ -417,18 +418,20 @@ scheduler(void)
       continue;
     }
       
+    p->switches++; // FOR PSTAT
 
     // Switch to chosen process.  It is the process's job
     // to release ptable.lock and then reacquire it
     // before jumping back to us.
     c->proc = p;
-    while (p->schedticks < p->timeslice) {
+    while (p->schedticks < p->timeslice && p->state != ZOMBIE) {
       switchuvm(p);
       p->state = RUNNING;
 
       swtch(&(c->scheduler), p->context);
       switchkvm();
       p->schedticks++;
+      p->schedticks_total++; // FOR PSTAT
     }
     p->schedticks = 0;
     
@@ -436,7 +439,12 @@ scheduler(void)
     // Process is done running for now.
     // It should have changed its p->state before coming back.
     c->proc = 0;
-    rotate();
+
+    if (p->state == ZOMBIE) {
+      popHead();
+    } else {
+      rotate();
+    }
     release(&ptable.lock);
 
   }
@@ -708,7 +716,7 @@ getpinfo(struct pstat *ps) {
   acquire(&ptable.lock);
   int i = 0;
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-    if (p == 0) {
+    if (p == 0 || p -> pid == 0) {
       ps->inuse[i] = 0;
     } else {
       ps->inuse[i] = 1;
@@ -716,8 +724,9 @@ getpinfo(struct pstat *ps) {
       ps->timeslice[i] = p->timeslice;
       ps->compticks[i] = p->compticks_total;
       ps->schedticks[i] = p->schedticks_total;
-      ps->sleepticks[i] = p->schedticks_total;
+      ps->sleepticks[i] = p->sleepticks;
       ps->switches[i] = p->switches;
+      cprintf("id: %d, \n",p->pid);
     }
     i++;
   }
