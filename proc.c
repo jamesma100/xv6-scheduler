@@ -179,6 +179,7 @@ found:
 
   // create node for process and add to list
   // setslice(p->pid,5); // currently gives zombie exit
+  // setslice(p->pid, 5);
   push(p);
   cprintf("process %d pushed\n", p->pid);
   // struct pstat p_temp;
@@ -732,6 +733,7 @@ getpinfo(struct pstat *ps) {
     cprintf("schedticks: %d, ",ps->schedticks[i]);
     cprintf("sleepticks: %d, ",ps->sleepticks[i]);
     cprintf("switches: %d\n",ps->switches[i]);
+    print_queue();
   }
   // end print
   release(&ptable.lock);
