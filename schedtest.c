@@ -9,6 +9,17 @@
 int
 main(int argc, char **argv)
 {
+    // int pid = getpid();
+    // printf(1, "pid is %d\n", pid);
+    // setslice(pid, 3);
+    // struct pstat ps;
+    // getpinfo(&ps);
+
+    // sleep(37);
+    // getpinfo(&ps);
+
+
+    // ========================== //
     if (argc != 6) {
         printf(2, "exactly five arguments allowed\n");
         exit();

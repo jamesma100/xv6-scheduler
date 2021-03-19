@@ -156,6 +156,9 @@ found:
   p->compslice = 0;
   p->sleepticks = 0;
   p->compticks = 0;
+  p->switches = 0;
+  p->schedticks = 0;
+  p->schedticks_total = 0;
 
   release(&ptable.lock);
 
@@ -544,6 +547,10 @@ sleep(void *chan, struct spinlock *lk)
   p->chan = chan;
   p->state = SLEEPING;
 
+  // if (p->asleeptick == 0) {
+  // }
+  // cprintf("asleeptick stored for pid %d with value %d\n", p->pid, p->asleeptick);
+
   sched();
 
   // Tidy up.
@@ -565,13 +572,25 @@ wakeup1(void *chan)
   struct proc *p;
 
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
-    if(p->state == SLEEPING && p->chan == chan && chan == &ticks) {
-      p->compslice++; // compensation ticks for sleeping'
-      p->sleepticks++; // PSTAT
-    }
+    // if(p->state == SLEEPING && p->chan == chan && chan == &ticks) {
+    //   p->sleepticks++; // PSTAT
+    // }
 
-    if(p->state == SLEEPING && p->chan == chan && p->wakeuptick <= ticks) { // e.g. if a process sleeps on tick 4 for 3 ticks (wakeuptick=7), it should wakeup at tick 7
+    if(p->state == SLEEPING && p->chan == chan && (chan != &ticks || (chan == &ticks && p->wakeuptick <= ticks))) { // e.g. if a process sleeps on tick 4 for 3 ticks (wakeuptick=7), it should wakeup at tick 7
       p->state = RUNNABLE;
+      // if (p->asleeptick != 0) {
+      //   p->compslice = ticks - p->asleeptick;
+      //   p->sleepticks += p->compslice;
+      // }
+      // p->asleeptick = 0;
+      
+
+      // if (p->pid == 3) {
+      //     cprintf("asleeptick is %d\n", p->asleeptick);
+      //     cprintf("wakeuptick is %d\n", p->wakeuptick);
+      //     cprintf("p chan is %p\n", p->chan);
+      //     cprintf("ticks address is %p\n", &ticks);
+      //   }
     } 
       
   }
@@ -600,8 +619,10 @@ kill(int pid)
     if(p->pid == pid){
       p->killed = 1;
       // Wake process from sleep if necessary.
-      if(p->state == SLEEPING)
+      if(p->state == SLEEPING) {
         p->state = RUNNABLE;
+        push(p); // Per Piazza @705
+      }
       release(&ptable.lock);
       return 0;
     }
@@ -653,7 +674,6 @@ procdump(void)
 int
 setslice(int pid, int slice) {
   struct proc *p;
-
   acquire(&ptable.lock);
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->pid == pid){
@@ -733,10 +753,18 @@ getpinfo(struct pstat *ps) {
   struct proc *p;
   acquire(&ptable.lock);
   int i = 0;
-  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-    if (p == 0 || p -> pid == 0) {
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++, i++){    
+    if (p->state == UNUSED) {
       ps->inuse[i] = 0;
-    } else {
+      ps->pid[i] = 0;
+      ps->timeslice[i] = 0;
+      ps->compticks[i] = 0;
+      ps->schedticks[i] = 0;
+      ps->sleepticks[i] = 0;
+      ps->switches[i] = 0;
+    } 
+    
+    else {
       ps->inuse[i] = 1;
       ps->pid[i] = p->pid;
       ps->timeslice[i] = p->timeslice;
@@ -744,14 +772,15 @@ getpinfo(struct pstat *ps) {
       ps->schedticks[i] = p->schedticks_total;
       ps->sleepticks[i] = p->sleepticks;
       ps->switches[i] = p->switches;
-      cprintf("id: %d, \n",p->pid);
+      // cprintf("pid: %d , ",ps->pid[i]);
+      // cprintf("timeslice: %d\n, ",ps->timeslice[i]);
     }
-    i++;
   }
+
   // print pstat data
   for (int i = 0; i < NPROC; ++i) {
-    if (ps->pid[i] == 0) {
-      break;
+    if (ps->pid[i] < 1 || ps->pid[i] > 63) {
+      continue;
     }
     cprintf("inuse: %d, ",ps->inuse[i]);
     cprintf("pid: %d, ",ps->pid[i]);
