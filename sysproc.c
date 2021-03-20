@@ -137,7 +137,7 @@ int
 sys_fork2(void) {
   int slice;
 
-  if(argint(0, &slice) <= 0) {
+  if(argint(0, &slice) < 0) {
     return -1;
   }
 

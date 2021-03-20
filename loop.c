@@ -7,10 +7,11 @@ int
 main(int argc, char **argv)
 {    
     if (argc != 2) {
-        printf(2, "exactly one argument allowed\n");
+        printf(2, "exactly one argument allowed, %d given\n", argc);
         exit();
     }
     int sleepT = atoi(argv[1]);
+    printf(1, "SleepT: %d\n", sleepT);
     printf(1, "Sleep started\n");
     sleep(sleepT);
     printf(1, "Sleep ended\n");
@@ -20,9 +21,11 @@ main(int argc, char **argv)
         j += i * j + 1;
         i++;
     }
+    
     struct pstat p;
     getpinfo(&p);
-    printf(1, "ready to exit\n");
+    // printf(1, "ready to exit loop\n");
+
 
     exit();
 }

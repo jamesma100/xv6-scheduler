@@ -24,42 +24,70 @@ main(int argc, char **argv)
         printf(2, "exactly five arguments allowed\n");
         exit();
     }
-    int sliceA = atoi(argv[1]);
-    int sleepA = atoi(argv[2]);
-    int sliceB = atoi(argv[3]);
-    int sleepB = atoi(argv[4]);
-    int sleepParent = atoi(argv[5]);
-
+    char* sliceA = argv[1];
+    char* sleepA = argv[2];
+    char* sliceB = argv[3];
+    char* sleepB = argv[4];
+    char* sleepParent = argv[5];
     // TODO
     // arguments for loop
-    char *argvA[] = { "sh", (char*)&sleepA };
-    char *argvB[] = { "sh", (char*)&sleepB };
+    char *argvA[3] = { "loop", sleepA, '\0' };
+    printf(1, "arg0: %s\n", argvA[0]);
+    printf(1, "arg1: %d\n", atoi(argvA[1]));
+    printf(1, "arg2: %s\n", argvA[2]);
+    //char *argvB[] = { "loop", (char*)sleepB };
 
     // spawn two children processes
-    int pidA = fork2(sliceA);
-    int pidB = fork2(sliceB);
+    int pidA = fork2(atoi(sliceA));
+
     // child runs
     if (pidA == 0) {
-        if (exec("loop",argvA) == -1) {
+        printf(1, "child A runs\n");
+        if (exec(argvA[0],argvA) == -1) {
             printf(1, "command not found\n");
             exit();
         }
-    } else {
-        sleep(sleepParent);
-        wait();
     }
+    char *argvB[3] = { "loop", sleepB, '\0' };
+    printf(1, "arg0: %s\n", argvB[0]);
+    printf(1, "arg1: %d\n", atoi(argvB[1]));
+    printf(1, "arg2: %s\n", argvB[2]);
+
+    int pidB = fork2(atoi(sliceB));
     if (pidB == 0) {
-        if (exec("loop",argvB) == -1) {
+        printf(1, "child B runs\n");
+        if (exec(argvB[0],argvB) == -1) {
             printf(1, "command not found\n");
             exit();
         }
-    } else {
-        sleep(sleepParent);
+    } 
+
+    sleep(atoi(sleepParent));
+    //struct pstat p;
+    // getpinfo(&p);
+    int compticksA = 0;
+    int compticksB = 0;
+    // for (int i = 0; i < NPROC; ++i) {
+    //     if (p.pid[i] == pidA) {
+    //         compticksA = p.compticks[i];
+    //     }
+    //     if (p.pid[i] == pidB) {
+    //         compticksB = p.compticks[i];
+    //     }
+    // }
+    if (pidA != 0) {
+        printf(1, "parent wait for A\n");
         wait();
     }
-    sleep(sleepParent);
-    struct pstat p;
-    getpinfo(&p);
+    if (pidB != 0) {
+        printf(1, "parent wait for B\n");
+        wait();
+    }
+    printf(1, "pidA: %d\n", pidA);
+    printf(1, "pidB: %d\n", pidB);
+    
     printf(1, "prepare to exit\n");
+    printf(1, "%d %d\n", compticksA, compticksB);
+
     exit();
 }

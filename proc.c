@@ -789,7 +789,7 @@ getpinfo(struct pstat *ps) {
     cprintf("schedticks: %d, ",ps->schedticks[i]);
     cprintf("sleepticks: %d, ",ps->sleepticks[i]);
     cprintf("switches: %d\n",ps->switches[i]);
-    print_queue();
+    //print_queue();
   }
   // end print
   release(&ptable.lock);
