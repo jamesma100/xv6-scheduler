@@ -187,7 +187,7 @@ found:
   // setslice(p->pid,5); // currently gives zombie exit
   // setslice(p->pid, 5);
   push(p);
-  cprintf("process %d pushed\n", p->pid);
+  // cprintf("process %d pushed\n", p->pid);
   // struct pstat p_temp;
   // getpinfo(&p_temp);
   // print_queue();
@@ -413,7 +413,22 @@ scheduler(void)
   for(;;){
     // cprintf("p pid is %d\n", p->pid);
     p = head;
-
+    // if (p-> pid == 4) {
+    //   cprintf("process 4 is head\n");
+    //   if (p-> state == SLEEPING) {
+    //     cprintf("process 4 is sleeping in scheduler\n");
+    //   } else if (p->state == EMBRYO) {
+    //     cprintf("process 4 is embryo\n");
+    //   } else if (p->state == RUNNABLE) {
+    //     cprintf("process 4 is runnable\n");
+    //     cprintf("process 4 time slice is %d\n", p->timeslice);
+    //   } else if (p->state == UNUSED) {
+    //     cprintf("process 4 is unused\n");
+    //   }
+    //   if (p->chan == &ticks) {
+    //     cprintf("sleeping on ticks\n");
+    //   }
+    // }
       // Enable interrupts on this processor.
     sti();
 
@@ -430,7 +445,7 @@ scheduler(void)
     // to release ptable.lock and then reacquire it
     // before jumping back to us.
     c->proc = p;
-    while (p->schedticks < p->timeslice + p->compslice && p->state != ZOMBIE) {
+    while (p->schedticks < p->timeslice + p->compslice && p->state != ZOMBIE && (p->pid <= 2 || p->state != SLEEPING)) {
       switchuvm(p);
       p->state = RUNNING;
 
@@ -441,9 +456,24 @@ scheduler(void)
         p->compticks++; // process is currently using a compensation tick
       }
 
+      // if (p->pid == 4) {
+      //   if (p->compslice > 0) {
+      //     cprintf("**************inside while loop for process 4 \n");
+      //     cprintf("process 4 compslice is %d\n", p->compslice);
+      //     cprintf("process 4 compticks is %d\n", p->compticks);
+      //     cprintf("process 4 schedticks is %d\n", p->schedticks);
+      //     cprintf("process 4 timeslice is %d\n", p->timeslice);
+      //     cprintf("************************\n");
+      //   }
+        
+      // }
+
       p->schedticks++;
       p->schedticks_total++; // FOR PSTAT
     }
+    // if (p->pid == 4) {
+    //   cprintf("process 4 found\n");
+    // }
     p->compslice = 0; // any unused compensation ticks are gone after process finishes running
     p->schedticks = 0;
     
@@ -453,7 +483,9 @@ scheduler(void)
     c->proc = 0;
 
     if (p->state == ZOMBIE) {
+      // cprintf("popped head of process %d\n", head->pid);
       popHead();
+      
     } else {
       rotate();
     }
@@ -578,6 +610,14 @@ wakeup1(void *chan)
 
     if(p->state == SLEEPING && p->chan == chan && (chan != &ticks || (chan == &ticks && p->wakeuptick <= ticks))) { // e.g. if a process sleeps on tick 4 for 3 ticks (wakeuptick=7), it should wakeup at tick 7
       p->state = RUNNABLE;
+
+      if (p->chan == &ticks) {
+        p->compslice = ticks - p->asleeptick;
+      }
+      // if (p->pid > 2) {
+      //   push(p);
+      //   cprintf("waked up and pushed process %d\n", p->pid);
+      // }
       // if (p->asleeptick != 0) {
       //   p->compslice = ticks - p->asleeptick;
       //   p->sleepticks += p->compslice;
@@ -778,21 +818,22 @@ getpinfo(struct pstat *ps) {
   }
 
   // print pstat data
-  for (int i = 0; i < NPROC; ++i) {
-    if (ps->pid[i] < 1 || ps->pid[i] > 63) {
-      continue;
-    }
-    cprintf("inuse: %d, ",ps->inuse[i]);
-    cprintf("pid: %d, ",ps->pid[i]);
-    cprintf("timeslice: %d, ",ps->timeslice[i]);
-    cprintf("compticks: %d, ",ps->compticks[i]);
-    cprintf("schedticks: %d, ",ps->schedticks[i]);
-    cprintf("sleepticks: %d, ",ps->sleepticks[i]);
-    cprintf("switches: %d\n",ps->switches[i]);
-    //print_queue();
-  }
+  // for (int i = 0; i < NPROC; ++i) {
+  //   if (ps->pid[i] < 1 || ps->pid[i] > 63) {
+  //     continue;
+  //   }
+  //   cprintf("inuse: %d, ",ps->inuse[i]);
+  //   cprintf("pid: %d, ",ps->pid[i]);
+  //   cprintf("timeslice: %d, ",ps->timeslice[i]);
+  //   cprintf("compticks: %d, ",ps->compticks[i]);
+  //   cprintf("schedticks: %d, ",ps->schedticks[i]);
+  //   cprintf("sleepticks: %d, ",ps->sleepticks[i]);
+  //   cprintf("switches: %d\n",ps->switches[i]);
+  //   //print_queue();
+  // }
+  // cprintf("-------------\n");
   // end print
   release(&ptable.lock);
-  cprintf("end of getpinfo\n");
+  // cprintf("end of getpinfo\n");
   return 0;
 }
