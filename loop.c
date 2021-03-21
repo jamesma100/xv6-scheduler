@@ -6,16 +6,12 @@
 int
 main(int argc, char **argv)
 {    
-    // printf(1, "==================loop process %d started==========================\n", getpid());
     if (argc != 2) {
         printf(2, "exactly one argument allowed, %d given\n", argc);
         exit();
     }
     int sleepT = atoi(argv[1]);
-    // printf(1, "<<<<<<<<<<<<<<<<SleepT: %d for pid %d\n", sleepT, getpid());
-    // printf(1, "Sleep started\n");
     sleep(sleepT);
-   // printf(1, ">>>>>>>>>>>>>>>>>>Sleep ended for process %d\n", getpid());
 
     int i = 0, j = 0;
     while (i < 800000000) {
@@ -23,11 +19,7 @@ main(int argc, char **argv)
         i++;
     }
     
-    // printf(1, "pstat for loop %d\n", getpid());
     struct pstat p;
     getpinfo(&p);
-    // printf(1, "ready to exit loop %d\n", getpid());
-
-
     exit();
 }

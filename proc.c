@@ -746,6 +746,9 @@ getslice(int pid) {
 
 int
 fork2(int slice) {
+  if (slice < 0) {
+    return -1;
+  }
   int i, pid;
   struct proc *np;
   struct proc *curproc = myproc();
@@ -812,28 +815,9 @@ getpinfo(struct pstat *ps) {
       ps->schedticks[i] = p->schedticks_total;
       ps->sleepticks[i] = p->sleepticks;
       ps->switches[i] = p->switches;
-      // cprintf("pid: %d , ",ps->pid[i]);
-      // cprintf("timeslice: %d\n, ",ps->timeslice[i]);
     }
   }
 
-  // print pstat data
-  // for (int i = 0; i < NPROC; ++i) {
-  //   if (ps->pid[i] < 1 || ps->pid[i] > 63) {
-  //     continue;
-  //   }
-  //   cprintf("inuse: %d, ",ps->inuse[i]);
-  //   cprintf("pid: %d, ",ps->pid[i]);
-  //   cprintf("timeslice: %d, ",ps->timeslice[i]);
-  //   cprintf("compticks: %d, ",ps->compticks[i]);
-  //   cprintf("schedticks: %d, ",ps->schedticks[i]);
-  //   cprintf("sleepticks: %d, ",ps->sleepticks[i]);
-  //   cprintf("switches: %d\n",ps->switches[i]);
-  //   //print_queue();
-  // }
-  // cprintf("-------------\n");
-  // end print
   release(&ptable.lock);
-  // cprintf("end of getpinfo\n");
   return 0;
 }
